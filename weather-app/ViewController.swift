@@ -6,39 +6,38 @@
 //
 
 import UIKit
-import CoreLocation
+import MapKit
 
 class ViewController: UIViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		convertCityToCoordinates(cityName: "Novosibirsk")
+		searchCity(cityName: "Novosibirsk")
 	}
 
-	private func convertCityToCoordinates(cityName: String) {
-		let geocoder = CLGeocoder()
+	private func searchCity(cityName: String) {
+		let request = MKLocalSearch.Request()
+		request.naturalLanguageQuery = cityName
+		request.resultTypes = [.address]
 
-		geocoder.geocodeAddressString(cityName) { placemarks, error in
+		let search = MKLocalSearch(request: request)
+		search.start { response, error in
 			if let error = error {
-				print("Failed to geocode city \(cityName): \(error.localizedDescription)")
+				print("Search error: \(error.localizedDescription)")
 				return
 			}
 
-			guard let placemark = placemarks?.first,
-				  let location = placemark.location else {
-						print("No coordinates found for city \(cityName)")
-						return
+			guard let mapItem = response?.mapItems.first else {
+				print("No results found for city \(cityName)")
+				return
 			}
 
-			let latitude = location.coordinate.latitude
-			let longitude = location.coordinate.longitude
-			
-			// город из placemark.locality
-			let foundCity = placemark.locality ?? "City not identified"
+			let coordinate = mapItem.location.coordinate
+			let city = mapItem.name ?? "City not identified"
 
 			print("Input city: \(cityName)")
-			print("Found city: \(foundCity)")
-			print("Coordinates: \(latitude), \(longitude)")
+			print("Found city: \(city)")
+			print("Coordinates: \(coordinate.latitude), \(coordinate.longitude)")
 		}
 	}
 }
